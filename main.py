@@ -46,17 +46,9 @@ with col1:
     st.markdown("Often professionals would like to improve their emails, but don't have the skills to do so. \n\n This tool \
                 will help you improve your email skills by converting your emails into a more professional format. This tool \
                 is powered by [LangChain](www.langchain.com) and [OpenAI](https://openai.com) and made by [@GregKamradt](https://twitter.com/GregKamradt).")
-    st.markdown("*Example: [This Tweet](https://twitter.com/DannyRichman/status/1598254671591723008)*")
 
 with col2:
-    st.image(image='TweetScreenshot.png', width=500)
-
-
-if "generated" not in st.session_state:
-    st.session_state["generated"] = []
-
-if "past" not in st.session_state:
-    st.session_state["past"] = []
+    st.image(image='TweetScreenshot.png', width=500, caption='https://twitter.com/DannyRichman/status/1598254671591723008')
 
 st.markdown("## Enter Your Email To Convert")
 
@@ -77,7 +69,7 @@ def get_text():
 
 email_input = get_text()
 
-st.markdown("### Your Converted Email")
+st.markdown("### Your Converted Email:")
 
 if email_input:
     output = llm(prompt.format(tone=option_tone, dialect=option_dialect, email=email_input))
