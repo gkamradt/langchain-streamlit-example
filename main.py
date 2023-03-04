@@ -1,22 +1,56 @@
 """Python file to serve as the frontend"""
 import streamlit as st
-from streamlit_chat import message
-
-from langchain.chains import ConversationChain
 from langchain.llms import OpenAI
+from langchain import PromptTemplate
 
+template = """
+    Below is an email that may be poorly worded.
+    Your goal is to:
+    - Properly format the email
+    - Convert the input text to a specified tone
+    - Convert the input text to a specified dialect
 
-def load_chain():
+    Here are some examples different Tones:
+    - Formal: We went to Barcelona for the weekend. We have a lot of things to tell you.
+    - Informal: Went to Barcelona for the weekend. Lots to tell you.  
+
+    Here are some examples of words in different dialects:
+    - American English: French Fries, cotton candy, apartment, garbage, cookie, green thumb, parking lot, pants, windshield
+    - British English: chips, candyfloss, flag, rubbish, biscuit, green fingers, car park, trousers, windscreen
+
+    Below is the email, tone, and dialect:
+    TONE: {tone}
+    DIALECT: {dialect}
+    EMAIL: {email}
+    
+    YOUR RESPONSE:
+"""
+
+prompt = PromptTemplate(
+    input_variables=["tone", "dialect", "email"],
+    template=template,
+)
+
+def load_LLM():
     """Logic for loading the chain you want to use should go here."""
     llm = OpenAI(temperature=0)
-    chain = ConversationChain(llm=llm)
-    return chain
+    return llm
 
-chain = load_chain()
+llm = load_LLM()
 
 # From here down is all the StreamLit UI.
-st.set_page_config(page_title="LangChain Demo", page_icon=":robot:")
-st.header("LangChain Demo")
+st.set_page_config(page_title="Globalize Email", page_icon=":robot:")
+st.header("Globalize Text")
+col1, col2 = st.columns(2)
+with col1:
+    st.markdown("Often professionals would like to improve their emails, but don't have the skills to do so. \n\n This tool \
+                will help you improve your email skills by converting your emails into a more professional format. This tool \
+                is powered by [LangChain](www.langchain.com) and [OpenAI](https://openai.com) and made by [@GregKamradt](https://twitter.com/GregKamradt).")
+    st.markdown("*Example: [This Tweet](https://twitter.com/DannyRichman/status/1598254671591723008)*")
+
+with col2:
+    st.image(image='TweetScreenshot.png', width=500)
+
 
 if "generated" not in st.session_state:
     st.session_state["generated"] = []
@@ -24,22 +58,28 @@ if "generated" not in st.session_state:
 if "past" not in st.session_state:
     st.session_state["past"] = []
 
+st.markdown("## Enter Your Email To Convert")
+
+col1, col2 = st.columns(2)
+with col1:
+    option_tone = st.selectbox(
+        'Which tone would you like your email to have?',
+        ('Formal', 'Informal'))
+    
+with col2:
+    option_dialect = st.selectbox(
+        'Which English Dialect would you like?',
+        ('American English', 'British English'))
 
 def get_text():
-    input_text = st.text_input("You: ", "Hello, how are you?", key="input")
+    input_text = st.text_area("", placeholder="Your Email...", key="email_input")
     return input_text
 
+email_input = get_text()
 
-user_input = get_text()
+st.markdown("### Your Converted Email")
 
-if user_input:
-    output = chain.run(input=user_input)
+if email_input:
+    output = llm(prompt.format(tone=option_tone, dialect=option_dialect, email=email_input))
 
-    st.session_state.past.append(user_input)
-    st.session_state.generated.append(output)
-
-if st.session_state["generated"]:
-
-    for i in range(len(st.session_state["generated"]) - 1, -1, -1):
-        message(st.session_state["generated"][i], key=str(i))
-        message(st.session_state["past"][i], is_user=True, key=str(i) + "_user")
+    st.write(output)
